@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"regexp"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -20,14 +21,30 @@ import (
 
 type DB = pgxpool.Pool
 
-func Open(ctx context.Context, databaseURL string) (*DB, error) {
+var schemaNamePattern = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
+
+func Open(ctx context.Context, databaseURL, schema string) (*DB, error) {
 	cfg, err := pgxpool.ParseConfig(databaseURL)
 	if err != nil {
 		return nil, err
 	}
+	if schema == "" {
+		schema = "public"
+	}
+	if !schemaNamePattern.MatchString(schema) {
+		return nil, fmt.Errorf("invalid PostgreSQL schema name %q", schema)
+	}
 	cfg.MaxConns = 4
 	cfg.MinConns = 0
 	cfg.MaxConnLifetime = time.Hour
+	cfg.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
+		quotedSchema := pgx.Identifier{schema}.Sanitize()
+		if _, err := conn.Exec(ctx, "CREATE SCHEMA IF NOT EXISTS "+quotedSchema); err != nil {
+			return err
+		}
+		_, err := conn.Exec(ctx, "SET search_path TO "+quotedSchema+", public")
+		return err
+	}
 	db, err := pgxpool.NewWithConfig(ctx, cfg)
 	if err != nil {
 		return nil, err

@@ -17,6 +17,7 @@ type Settings struct {
 	DBName        string
 	DBUser        string
 	DBPassword    string
+	DBSchema      string
 	DatabaseDSN   string
 	ClientID      string
 	ClientSecret  string
@@ -39,6 +40,7 @@ func Load() Settings {
 		DBName:        env("WHOOP_DB_NAME", "health"),
 		DBUser:        env("WHOOP_DB_USER", "health"),
 		DBPassword:    env("WHOOP_DB_PASSWORD", ""),
+		DBSchema:      env("WHOOP_DB_SCHEMA", "public"),
 		DatabaseDSN:   os.Getenv("WHOOP_DATABASE_URL"),
 		ClientID:      os.Getenv("WHOOP_CLIENT_ID"),
 		ClientSecret:  os.Getenv("WHOOP_CLIENT_SECRET"),

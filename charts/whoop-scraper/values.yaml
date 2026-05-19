@@ -45,6 +45,7 @@ env:
   WHOOP_DB_PORT: "5432"
   WHOOP_DB_NAME: "health"
   WHOOP_DB_USER: "health"
+  WHOOP_DB_SCHEMA: "public"
   WHOOP_SCRAPE_DAYS: "7"
 
 envFrom: []

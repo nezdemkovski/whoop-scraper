@@ -67,7 +67,7 @@ func usage() {
 
 Environment:
   WHOOP_CLIENT_ID, WHOOP_CLIENT_SECRET
-  WHOOP_DATABASE_URL or WHOOP_DB_HOST/PORT/NAME/USER/PASSWORD
+  WHOOP_DATABASE_URL or WHOOP_DB_HOST/PORT/NAME/USER/PASSWORD/SCHEMA
   WHOOP_ACCESS_TOKEN, WHOOP_REFRESH_TOKEN for first database bootstrap
   WHOOP_TOKEN_STORAGE=db|file, WHOOP_ENCRYPTION_KEY, WHOOP_SCRAPE_DAYS`)
 }
@@ -83,13 +83,13 @@ func cmdInitDB(ctx context.Context, logger *slog.Logger, cfg config.Settings, ar
 		return nil
 	}
 
-	db, err := store.Open(ctx, cfg.DatabaseURL())
+	db, err := store.Open(ctx, cfg.DatabaseURL(), cfg.DBSchema)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 
-	logger.Info("initializing database schema", "dsn", cfg.SafeDatabaseTarget())
+	logger.Info("initializing database schema", "dsn", cfg.SafeDatabaseTarget(), "schema", cfg.DBSchema)
 	return store.InitSchema(ctx, db)
 }
 
@@ -177,7 +177,7 @@ func cmdScrape(ctx context.Context, logger *slog.Logger, cfg config.Settings, ar
 		return err
 	}
 
-	db, err := store.Open(ctx, cfg.DatabaseURL())
+	db, err := store.Open(ctx, cfg.DatabaseURL(), cfg.DBSchema)
 	if err != nil {
 		return err
 	}
@@ -216,7 +216,7 @@ func tokenStorage(ctx context.Context, cfg config.Settings) (auth.TokenStorage, 
 	if cfg.TokenStorage == "file" {
 		return auth.NewFileStorage(cfg.TokenPath, cfg.AccessToken, cfg.RefreshToken), func() {}, nil
 	}
-	db, err := store.Open(ctx, cfg.DatabaseURL())
+	db, err := store.Open(ctx, cfg.DatabaseURL(), cfg.DBSchema)
 	if err != nil {
 		return nil, func() {}, err
 	}

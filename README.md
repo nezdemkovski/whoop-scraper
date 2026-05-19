@@ -28,6 +28,7 @@ export WHOOP_DB_PORT='5432'
 export WHOOP_DB_NAME='health'
 export WHOOP_DB_USER='health'
 export WHOOP_DB_PASSWORD='password'
+export WHOOP_DB_SCHEMA='whoop'
 ```
 
 Optional:
@@ -107,6 +108,7 @@ spec:
           WHOOP_DB_HOST: whoop-postgres-rw
           WHOOP_DB_NAME: whoop
           WHOOP_DB_USER: whoop
+          WHOOP_DB_SCHEMA: whoop
           WHOOP_SCRAPE_DAYS: "7"
         envFrom:
           - secretRef:
