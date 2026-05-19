@@ -1,0 +1,6 @@
+apiVersion: v2
+name: whoop-scraper
+description: Scrape WHOOP Developer API data into PostgreSQL
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

@@ -1,0 +1,83 @@
+image:
+  repository: ghcr.io/nezdemkovski/whoop-scraper
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+cronJob:
+  enabled: true
+  schedule: "0 6 * * *"
+  timeZone: "Europe/Prague"
+  suspend: false
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  backoffLimit: 2
+  restartPolicy: OnFailure
+  args:
+    - scrape
+
+backfillJob:
+  enabled: false
+  days: 500
+  nameSuffix: backfill
+  backoffLimit: 3
+  ttlSecondsAfterFinished: null
+
+initDb:
+  enabled: true
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+  backoffLimit: 3
+
+env:
+  WHOOP_DB_HOST: ""
+  WHOOP_DB_PORT: "5432"
+  WHOOP_DB_NAME: "health"
+  WHOOP_DB_USER: "health"
+  WHOOP_SCRAPE_DAYS: "7"
+
+envFrom: []
+extraEnv: []
+
+secret:
+  enabled: false
+  name: ""
+  stringData: {}
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+resources:
+  requests:
+    cpu: 25m
+    memory: 64Mi
+  limits:
+    memory: 256Mi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

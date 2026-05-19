@@ -1,0 +1,6 @@
+.git/
+.github/
+temp_app/
+bin/
+dist/
+*.tgz

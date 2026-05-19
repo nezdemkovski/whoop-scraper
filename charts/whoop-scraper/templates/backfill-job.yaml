@@ -1,0 +1,71 @@
+{{- if .Values.backfillJob.enabled -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "whoop-scraper.fullname" . }}-{{ .Values.backfillJob.nameSuffix }}
+  labels:
+    {{- include "whoop-scraper.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backfill
+spec:
+  backoffLimit: {{ .Values.backfillJob.backoffLimit }}
+  {{- if .Values.backfillJob.ttlSecondsAfterFinished }}
+  ttlSecondsAfterFinished: {{ .Values.backfillJob.ttlSecondsAfterFinished }}
+  {{- end }}
+  template:
+    metadata:
+      labels:
+        {{- include "whoop-scraper.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: backfill
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      serviceAccountName: {{ include "whoop-scraper.serviceAccountName" . }}
+      restartPolicy: OnFailure
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: backfill
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - scrape
+            - --days
+            - {{ .Values.backfillJob.days | quote }}
+          env:
+            {{- include "whoop-scraper.env" . | nindent 12 }}
+          {{- if or .Values.secret.enabled .Values.envFrom }}
+          envFrom:
+            {{- if .Values.secret.enabled }}
+            - secretRef:
+                name: {{ include "whoop-scraper.secretName" . }}
+            {{- end }}
+            {{- with .Values.envFrom }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- end }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
