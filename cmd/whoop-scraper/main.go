@@ -193,6 +193,7 @@ func cmdScrape(ctx context.Context, logger *slog.Logger, cfg config.Settings, ar
 	fmt.Printf("\nScrape completed (%s to %s)\n", s.StartDate, s.EndDate)
 	fmt.Println("Results:")
 	total := 0
+	failed := 0
 	for _, name := range []string{"user_profile", "body_measurement", "cycles", "recovery", "sleep", "workouts"} {
 		stat, ok := stats[name]
 		if !ok {
@@ -202,6 +203,7 @@ func cmdScrape(ctx context.Context, logger *slog.Logger, cfg config.Settings, ar
 			total += stat.Records
 			fmt.Printf("  %s: %d records\n", name, stat.Records)
 		} else {
+			failed++
 			fmt.Printf("  %s: FAILED - %s\n", name, stat.Error)
 		}
 	}
@@ -209,6 +211,9 @@ func cmdScrape(ctx context.Context, logger *slog.Logger, cfg config.Settings, ar
 
 	out, _ := json.Marshal(stats)
 	logger.Debug("scrape stats", "stats", string(out))
+	if failed > 0 {
+		return fmt.Errorf("scrape failed for %d endpoint(s)", failed)
+	}
 	return nil
 }
 

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"net"
 	"net/http"
@@ -211,6 +212,10 @@ func (c *Client) postToken(ctx context.Context, values url.Values) (Tokens, erro
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
+		if len(body) > 0 {
+			return Tokens{}, fmt.Errorf("token request failed: %s: %s", resp.Status, strings.TrimSpace(string(body)))
+		}
 		return Tokens{}, fmt.Errorf("token request failed: %s", resp.Status)
 	}
 
